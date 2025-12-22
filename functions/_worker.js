@@ -100,7 +100,7 @@ export async function onRequest(context) {
     }
   }
   
-  // 其他请求返回 404
-  return new Response('Not Found', { status: 404 });
+  // 其他请求（静态文件等）继续正常处理
+  return context.next();
 }
 

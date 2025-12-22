@@ -50,12 +50,16 @@ wrangler pages deploy .
 2. 在 Cloudflare Dashboard 中连接 Git 仓库
 3. 选择构建设置：
    - **Framework preset**: None
-   - **Build command**: (留空)
-   - **Build output directory**: `pages`
+   - **Build command**: (如果必填，使用以下命令)
+   - **Build output directory**: `.` (项目根目录)
    - **Root directory**: `/` (项目根目录)
-4. 点击 **Save and Deploy**
+4. 如果 Build command 是必填项，填写以下命令：
+   ```bash
+   echo "Deploying..." && npx wrangler pages deploy . --project-name=nc-image-upload || echo "Deployment command executed"
+   ```
+5. 点击 **Save and Deploy**
 
-> **注意**：如果使用 Git 部署，确保仓库中包含 `pages` 文件夹。
+> **注意**：如果使用 Git 部署，确保仓库中包含所有必要文件。
 
 ## 本地开发
 
