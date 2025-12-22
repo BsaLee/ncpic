@@ -14,15 +14,16 @@
 
 ## 部署到 Cloudflare Pages
 
-### 方法一：通过 Cloudflare Dashboard
+### 方法一：通过 Cloudflare Dashboard（推荐）
 
 1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
 2. 进入 **Pages** 部分
 3. 点击 **Create a project**
 4. 选择 **Upload assets**
-5. 上传以下文件：
+5. 选择整个 `pages` 文件夹或上传以下文件：
    - `index.html`
    - `main.js`
+   - `functions/` 文件夹（如果需要代理功能）
 6. 点击 **Deploy site**
 
 ### 方法二：通过 Wrangler CLI
@@ -37,19 +38,24 @@ npm install -g wrangler
 wrangler login
 ```
 
-3. 部署：
+3. 进入 pages 目录并部署：
 ```bash
+cd pages
 wrangler pages deploy .
 ```
 
-### 方法三：通过 Git 仓库
+### 方法三：通过 Git 仓库（推荐用于持续部署）
 
 1. 将代码推送到 GitHub/GitLab
 2. 在 Cloudflare Dashboard 中连接 Git 仓库
 3. 选择构建设置：
+   - **Framework preset**: None
    - **Build command**: (留空)
-   - **Build output directory**: `/`
+   - **Build output directory**: `pages`
+   - **Root directory**: `/` (项目根目录)
 4. 点击 **Save and Deploy**
+
+> **注意**：如果使用 Git 部署，确保仓库中包含 `pages` 文件夹。
 
 ## 本地开发
 
@@ -128,9 +134,19 @@ export default {
 
 - `index.html` - 主页面
 - `main.js` - 核心逻辑
-- `_worker.js` - Cloudflare Workers 代理（用于解决 CORS 问题）
-- `wrangler.toml` - Wrangler 配置文件
+- `functions/_worker.js` - Cloudflare Pages Functions（用于解决 CORS 问题）
 - `README.md` - 说明文档
+
+## 项目结构
+
+```
+pages/
+├── index.html              # 主页面
+├── main.js                 # 核心逻辑
+├── functions/              # Cloudflare Pages Functions
+│   └── _worker.js         # API 代理函数
+└── README.md              # 说明文档
+```
 
 ## 许可证
 
