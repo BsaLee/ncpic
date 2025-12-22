@@ -78,9 +78,14 @@ function displayFileInfo(file) {
     return true;
 }
 
+// 是否使用代理（如果遇到CORS问题，设置为true并使用Worker代理）
+const USE_PROXY = false; // 设置为 true 以使用 Worker 代理
+
 // 获取上传 Token
 async function getUploadToken(authToken) {
-    const url = 'https://lime-api.global.plaync.com/chat/getMediaUploadUrl';
+    const url = USE_PROXY 
+        ? '/api/getUploadToken' 
+        : 'https://lime-api.global.plaync.com/chat/getMediaUploadUrl';
     
     const headers = {
         'User-Agent': 'ncmtalk/6.44.1.0; iOS/16.2;',
@@ -103,11 +108,16 @@ async function getUploadToken(authToken) {
     };
     
     try {
-        const response = await fetch(url, {
+        const fetchOptions = {
             method: 'POST',
-            headers: headers,
-            body: JSON.stringify(data)
-        });
+            body: JSON.stringify(USE_PROXY ? { authToken } : data)
+        };
+        
+        if (!USE_PROXY) {
+            fetchOptions.headers = headers;
+        }
+        
+        const response = await fetch(url, fetchOptions);
         
         if (!response.ok) {
             const errorText = await response.text();
@@ -135,7 +145,9 @@ async function getUploadToken(authToken) {
 
 // 上传文件
 async function uploadFile(file, uploadToken) {
-    const url = `https://mediamessage-origin.plaync.com/message/upload/${uploadToken}`;
+    const url = USE_PROXY
+        ? `/api/upload/${uploadToken}`
+        : `https://mediamessage-origin.plaync.com/message/upload/${uploadToken}`;
     
     const ext = getFileExtension(file.name);
     const contentType = CONTENT_TYPE_MAP[ext] || 'image/jpeg';
@@ -152,11 +164,16 @@ async function uploadFile(file, uploadToken) {
     };
     
     try {
-        const response = await fetch(url, {
+        const fetchOptions = {
             method: 'POST',
-            headers: headers,
             body: formData
-        });
+        };
+        
+        if (!USE_PROXY) {
+            fetchOptions.headers = headers;
+        }
+        
+        const response = await fetch(url, fetchOptions);
         
         if (!response.ok) {
             let errorMsg = `上传失败: ${response.status}`;
