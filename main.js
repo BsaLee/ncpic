@@ -27,22 +27,43 @@ const result = document.getElementById('result');
 const viewUrl = document.getElementById('viewUrl');
 const copyBtn = document.getElementById('copyBtn');
 
-let selectedFile = null;
+let selectedFiles = [];
+let uploadedResults = [];
 
 // 复制文本到剪贴板
 function copyText(text, buttonId) {
     navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById(buttonId);
-        const originalText = btn.textContent;
-        btn.textContent = '已复制！';
-        btn.style.color = '#059669';
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.style.color = '#111827';
-        }, 2000);
+        if (btn) {
+            const originalText = btn.textContent;
+            btn.textContent = '已复制！';
+            btn.style.color = '#059669';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.color = '#111827';
+            }, 2000);
+        }
     }).catch(() => {
         showStatus('复制失败，请手动复制', 'error');
     });
+}
+
+// 复制所有 URL
+function copyAllUrls() {
+    const urls = uploadedResults.map(r => r.view_url).join('\n');
+    navigator.clipboard.writeText(urls).then(() => {
+        showStatus('已复制所有链接', 'success');
+    }).catch(() => {
+        showStatus('复制失败，请手动复制', 'error');
+    });
+}
+
+// 清空所有结果
+function clearAllResults() {
+    uploadedResults = [];
+    viewUrl.innerHTML = '';
+    result.classList.remove('show');
+    showStatus('已清空', 'info');
 }
 
 // 显示状态消息
@@ -81,14 +102,25 @@ function validateFile(file) {
 }
 
 // 显示文件信息
-function displayFileInfo(file) {
-    if (!validateFile(file)) {
+function displayFileInfo(files) {
+    const validFiles = [];
+    for (const file of files) {
+        if (validateFile(file)) {
+            validFiles.push(file);
+        }
+    }
+    
+    if (validFiles.length === 0) {
         return false;
     }
     
-    selectedFile = file;
-    fileName.textContent = file.name;
-    fileSize.textContent = formatFileSize(file.size);
+    selectedFiles = validFiles;
+    fileName.textContent = validFiles.length === 1 
+        ? validFiles[0].name 
+        : `已选择 ${validFiles.length} 个文件`;
+    
+    const totalSize = validFiles.reduce((sum, file) => sum + file.size, 0);
+    fileSize.textContent = formatFileSize(totalSize);
     fileInfo.classList.add('show');
     uploadBtn.disabled = false;
     return true;
@@ -213,9 +245,75 @@ async function uploadFile(file, uploadToken) {
     }
 }
 
+// 渲染单个上传结果
+function renderResult(resultData, index) {
+    const viewUrlValue = resultData.view_url;
+    const bbCode = `[img]${viewUrlValue}[/img]`;
+    const expireAt = resultData.expire_at;
+    
+    // 格式化过期时间
+    let expireText = '永久有效';
+    if (expireAt) {
+        const expireDate = new Date(expireAt);
+        const now = new Date();
+        const diffTime = expireDate - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays > 0) {
+            expireText = `${diffDays} 天后过期`;
+        } else {
+            expireText = '已过期';
+        }
+    }
+    
+    return `
+        <div style="display: flex; gap: 0.75rem; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; margin-bottom: 0.75rem; align-items: flex-start;">
+            <div style="position: relative; width: 3.75rem; flex-shrink: 0; overflow: hidden; border-radius: 0.25rem; background: white; cursor: pointer;" onclick="window.open('${viewUrlValue}', '_blank')">
+                <div style="padding-bottom: 100%;"></div>
+                <img src="${viewUrlValue}" alt="预览" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer">
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.5rem;">
+                    <span style="color: #059669;">✓</span> ${expireText}
+                </div>
+                <div style="display: flex; align-items: stretch; margin-bottom: 0.5rem;">
+                    <input readonly class="result-input" type="text" value="${viewUrlValue}" id="urlInput${index}" style="flex: 1; font-size: 0.75rem; background: #f9fafb; border: 1px solid #e5e7eb; border-right: 1px solid #d1d5db; padding: 0.25rem 0.5rem; font-family: monospace; cursor: pointer; outline: none; min-width: 0;" onclick="copyText('${viewUrlValue}', 'urlCopyBtn${index}'); this.select();">
+                    <button onclick="copyText('${viewUrlValue}', 'urlCopyBtn${index}')" id="urlCopyBtn${index}" style="font-size: 0.75rem; color: #111827; white-space: nowrap; font-weight: bold; background: #f9fafb; border: 1px solid #e5e7eb; border-left: 0; padding: 0.25rem 0.5rem; cursor: pointer;">URL</button>
+                </div>
+                <div style="display: flex; align-items: stretch;">
+                    <input readonly class="result-input" type="text" value="${bbCode}" id="bbCodeInput${index}" style="flex: 1; font-size: 0.75rem; background: #f9fafb; border: 1px solid #e5e7eb; border-right: 1px solid #d1d5db; padding: 0.25rem 0.5rem; font-family: monospace; cursor: pointer; outline: none; min-width: 0;" onclick="copyText('${bbCode}', 'bbCodeCopyBtn${index}'); this.select();">
+                    <button onclick="copyText('${bbCode}', 'bbCodeCopyBtn${index}')" id="bbCodeCopyBtn${index}" style="font-size: 0.75rem; color: #111827; white-space: nowrap; font-weight: bold; background: #f9fafb; border: 1px solid #e5e7eb; border-left: 0; padding: 0.25rem 0.5rem; cursor: pointer;">BBCode</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 更新结果显示
+function updateResultsDisplay() {
+    if (uploadedResults.length === 0) {
+        result.classList.remove('show');
+        return;
+    }
+    
+    const header = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <h3 style="font-size: 1.125rem; font-weight: 500; color: #111827;">上传成功 (${uploadedResults.length})</h3>
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="clearAllResults()" style="font-size: 0.875rem; color: #4b5563; background: none; border: none; cursor: pointer; padding: 0.25rem 0.5rem;">清空</button>
+                <button onclick="copyAllUrls()" style="font-size: 0.875rem; color: #4b5563; background: none; border: none; cursor: pointer; padding: 0.25rem 0.5rem;">复制全部</button>
+            </div>
+        </div>
+    `;
+    
+    const results = uploadedResults.map((r, i) => renderResult(r, i)).join('');
+    viewUrl.innerHTML = header + results;
+    result.classList.add('show');
+}
+
 // 处理上传
 async function handleUpload() {
-    if (!selectedFile) {
+    if (selectedFiles.length === 0) {
         showStatus('请先选择文件', 'error');
         return;
     }
@@ -223,88 +321,50 @@ async function handleUpload() {
     // 重置UI
     uploadBtn.disabled = true;
     progressContainer.classList.add('show');
-    progressFill.style.width = '30%';
-    result.classList.remove('show');
     hideStatus();
-    showStatus('正在获取上传令牌...', 'info');
     
-    try {
-        // 获取上传Token
-        const uploadToken = await getUploadToken(DEFAULT_AUTH_TOKEN);
-        progressFill.style.width = '60%';
-        showStatus('正在上传文件...', 'info');
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        const progress = ((i + 1) / selectedFiles.length) * 100;
+        progressFill.style.width = `${progress}%`;
+        showStatus(`正在上传 ${i + 1}/${selectedFiles.length}: ${file.name}`, 'info');
         
-        // 上传文件
-        const uploadResult = await uploadFile(selectedFile, uploadToken);
-        progressFill.style.width = '100%';
-        
-        // 显示结果
-        if (uploadResult.upload_result_list && uploadResult.upload_result_list.length > 0) {
-            const resultData = uploadResult.upload_result_list[0];
-            const viewUrlValue = resultData.view_url;
-            const bbCode = `[img]${viewUrlValue}[/img]`;
-            const expireAt = resultData.expire_at;
+        try {
+            // 获取上传Token
+            const uploadToken = await getUploadToken(DEFAULT_AUTH_TOKEN);
             
-            // 格式化过期时间
-            let expireText = '永久有效';
-            if (expireAt) {
-                const expireDate = new Date(expireAt);
-                const now = new Date();
-                const diffTime = expireDate - now;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                
-                if (diffDays > 0) {
-                    expireText = `${diffDays} 天后过期 (${expireDate.toLocaleDateString('zh-CN')})`;
-                } else {
-                    expireText = '已过期';
-                }
+            // 上传文件
+            const uploadResult = await uploadFile(file, uploadToken);
+            
+            // 保存结果
+            if (uploadResult.upload_result_list && uploadResult.upload_result_list.length > 0) {
+                uploadedResults.push(uploadResult.upload_result_list[0]);
+                successCount++;
+                updateResultsDisplay();
             }
-            
-            // 更新显示内容
-            viewUrl.innerHTML = `
-                <div style="margin-bottom: 1rem;">
-                    <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 1rem; border-radius: 0.5rem; overflow: hidden; border: 1px solid #e5e7eb;">
-                        <img src="${viewUrlValue}" alt="预览" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer">
-                    </div>
-                    <div style="text-align: center; font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">
-                        <span style="color: #f97316; font-weight: 500;">✓</span> ${expireText}
-                    </div>
-                </div>
-                <div style="margin-bottom: 0.75rem;">
-                    <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                        <input readonly class="result-input" type="text" value="${viewUrlValue}" id="urlInput" style="flex: 1; font-size: 0.75rem; background: #f9fafb; border: 1px solid #e5e7eb; border-right: 1px solid #d1d5db; padding: 0.25rem 0.5rem; font-family: monospace; cursor: pointer; outline: none;">
-                        <button onclick="copyText('${viewUrlValue}', 'urlCopyBtn')" id="urlCopyBtn" style="font-size: 0.75rem; color: #111827; white-space: nowrap; font-weight: bold; background: #f9fafb; border: 1px solid #e5e7eb; border-left: 0; padding: 0.25rem 0.5rem; cursor: pointer;">复制 URL</button>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <input readonly class="result-input" type="text" value="${bbCode}" id="bbCodeInput" style="flex: 1; font-size: 0.75rem; background: #f9fafb; border: 1px solid #e5e7eb; border-right: 1px solid #d1d5db; padding: 0.25rem 0.5rem; font-family: monospace; cursor: pointer; outline: none;">
-                        <button onclick="copyText('${bbCode}', 'bbCodeCopyBtn')" id="bbCodeCopyBtn" style="font-size: 0.75rem; color: #111827; white-space: nowrap; font-weight: bold; background: #f9fafb; border: 1px solid #e5e7eb; border-left: 0; padding: 0.25rem 0.5rem; cursor: pointer;">复制 BBCode</button>
-                    </div>
-                </div>
-            `;
-            
-            result.classList.add('show');
-            showStatus('上传成功！', 'success');
-            
-            // 添加点击输入框复制功能
-            document.getElementById('urlInput').onclick = () => {
-                copyText(viewUrlValue, 'urlCopyBtn');
-                document.getElementById('urlInput').select();
-            };
-            document.getElementById('bbCodeInput').onclick = () => {
-                copyText(bbCode, 'bbCodeCopyBtn');
-                document.getElementById('bbCodeInput').select();
-            };
-        } else {
-            throw new Error('上传响应中没有结果');
+        } catch (error) {
+            console.error(`上传 ${file.name} 失败:`, error);
+            failCount++;
         }
-    } catch (error) {
-        showStatus(error.message, 'error');
-        result.classList.remove('show');
-    } finally {
-        uploadBtn.disabled = false;
-        progressContainer.classList.remove('show');
-        progressFill.style.width = '0%';
     }
+    
+    // 显示最终结果
+    progressFill.style.width = '100%';
+    if (failCount === 0) {
+        showStatus(`全部上传成功！(${successCount} 个文件)`, 'success');
+    } else {
+        showStatus(`上传完成：成功 ${successCount} 个，失败 ${failCount} 个`, 'error');
+    }
+    
+    // 重置
+    uploadBtn.disabled = false;
+    progressContainer.classList.remove('show');
+    progressFill.style.width = '0%';
+    selectedFiles = [];
+    fileInfo.classList.remove('show');
 }
 
 // 事件监听
@@ -325,15 +385,16 @@ uploadArea.addEventListener('drop', (e) => {
     e.preventDefault();
     uploadArea.classList.remove('dragover');
     
-    const files = e.dataTransfer.files;
+    const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-        displayFileInfo(files[0]);
+        displayFileInfo(files);
     }
 });
 
 fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-        displayFileInfo(e.target.files[0]);
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+        displayFileInfo(files);
     }
 });
 
