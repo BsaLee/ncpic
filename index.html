@@ -13,255 +13,359 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: white;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .header-content {
+            padding: 0.5rem 1.5rem;
+        }
+
+        .header-title {
+            display: flex;
             align-items: center;
-            padding: 20px;
+            gap: 0.5rem;
         }
 
-        .container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 600px;
+        .header-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: #111827;
+        }
+
+        .header-text {
+            color: #111827;
+            font-weight: bold;
+            font-size: 1.125rem;
+            font-family: cursive, 'Apple Chancery', 'Brush Script MT', 'Comic Sans MS', sans-serif;
+        }
+
+        main {
+            padding: 1rem 1.5rem 1rem;
+            padding-top: 4rem;
+            flex: 1;
+            max-width: 1200px;
             width: 100%;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 28px;
+            margin: 0 auto;
         }
 
         .upload-area {
-            border: 2px dashed #667eea;
-            border-radius: 12px;
-            padding: 40px;
+            border: 1px solid #111827;
+            border-radius: 0.5rem;
+            padding: 1rem;
             text-align: center;
-            cursor: pointer;
             transition: all 0.3s;
-            background: #f8f9ff;
-            margin-bottom: 20px;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
         }
 
         .upload-area:hover {
-            border-color: #764ba2;
-            background: #f0f2ff;
+            background: #f9fafb;
         }
 
         .upload-area.dragover {
-            border-color: #764ba2;
-            background: #e8ebff;
+            background: #f3f4f6;
+            border-color: #374151;
         }
 
         .upload-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
+            width: 2rem;
+            height: 2rem;
+            color: #9ca3af;
+            margin: 0 auto 0.75rem;
         }
 
         .upload-text {
-            color: #666;
-            font-size: 16px;
-            margin-bottom: 10px;
+            font-size: 0.75rem;
+            color: #374151;
+            margin-bottom: 0.25rem;
         }
 
         .upload-hint {
-            color: #999;
-            font-size: 14px;
+            font-size: 0.75rem;
+            color: #6b7280;
         }
 
         #fileInput {
             display: none;
         }
 
-        .file-info {
-            margin: 20px 0;
-            padding: 15px;
-            background: #f5f5f5;
-            border-radius: 8px;
-            display: none;
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
         }
 
-        .file-info.show {
-            display: block;
+        .results-title {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #111827;
         }
 
-        .file-name {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
+        .results-actions {
+            display: flex;
+            gap: 0.5rem;
         }
 
-        .file-size {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .upload-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .action-btn {
+            font-size: 0.875rem;
+            color: #4b5563;
+            background: none;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 20px;
+            padding: 0.25rem 0.5rem;
+            transition: color 0.2s;
         }
 
-        .upload-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .action-btn:hover {
+            color: #111827;
         }
 
-        .upload-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
         }
 
-        .progress-container {
-            display: none;
-            margin-bottom: 20px;
+        .result-item {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            align-items: flex-start;
         }
 
-        .progress-container.show {
-            display: block;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e0e0e0;
-            border-radius: 4px;
+        .result-preview {
+            position: relative;
+            width: 3.75rem;
+            flex-shrink: 0;
             overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            width: 0%;
-            transition: width 0.3s;
-            animation: progress-animation 1.5s infinite;
-        }
-
-        @keyframes progress-animation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .status {
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .status.show {
-            display: block;
-        }
-
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .result {
-            display: none;
-            margin-top: 20px;
-        }
-
-        .result.show {
-            display: block;
-        }
-
-        .result-title {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .result-link {
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 8px;
-            word-break: break-all;
-            margin-bottom: 10px;
-            font-family: monospace;
-            font-size: 14px;
-            color: #333;
-        }
-
-        .copy-btn {
-            width: 100%;
-            padding: 10px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 8px;
+            border-radius: 0.25rem;
+            background: white;
+            transition: transform 0.2s;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
         }
 
-        .copy-btn:hover {
-            background: #218838;
+        .result-preview:hover {
+            transform: scale(1.05);
         }
 
-        .copy-btn:active {
-            transform: scale(0.98);
+        .result-preview::before {
+            content: '';
+            display: block;
+            padding-bottom: 100%;
+        }
+
+        .result-preview img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .result-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .result-input-group {
+            display: flex;
+            align-items: stretch;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-input {
+            flex: 1;
+            font-size: 0.75rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-right: 1px solid #d1d5db;
+            padding: 0.25rem 0.5rem;
+            font-family: monospace;
+            word-break: break-all;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            min-width: 0;
+        }
+
+        .result-input:hover {
+            background: #f3f4f6;
+        }
+
+        .result-input:focus {
+            background: white;
+            border-color: #111827;
+        }
+
+        .result-label {
+            font-size: 0.75rem;
+            color: #111827;
+            white-space: nowrap;
+            font-weight: bold;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-left: 0;
+            padding: 0.25rem 0.5rem;
+            cursor: default;
+        }
+
+        .status-toast {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .status-toast.show {
+            opacity: 1;
+        }
+
+        .status-toast.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-toast.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-toast.info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .footer-icon {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .footer-divider {
+            color: #d1d5db;
+        }
+
+        .footer-highlight {
+            color: #f97316;
+            font-weight: 500;
+        }
+
+        @media (min-width: 768px) {
+            .header-content {
+                padding: 0.5rem 4rem;
+            }
+            main {
+                padding: 1rem 4rem 1rem;
+                padding-top: 4rem;
+            }
+            footer {
+                padding: 1rem 4rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .header-content {
+                padding: 0.5rem 8rem;
+            }
+            main {
+                padding: 1rem 8rem 1rem;
+                padding-top: 4rem;
+            }
+            footer {
+                padding: 1rem 8rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>NC 图床上传工具</h1>
-        
-        <div class="upload-area" id="uploadArea">
-            <div class="upload-icon">📁</div>
-            <div class="upload-text">点击选择文件或拖拽文件到此处</div>
-            <div class="upload-hint">支持 JPG、PNG、GIF、WEBP 格式</div>
-            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif,image/webp">
-        </div>
-
-        <div class="file-info" id="fileInfo">
-            <div class="file-name" id="fileName"></div>
-            <div class="file-size" id="fileSize"></div>
-        </div>
-
-        <button class="upload-btn" id="uploadBtn" disabled>开始上传</button>
-
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
+    <header>
+        <div class="header-content">
+            <div class="header-title">
+                <svg class="header-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <span class="header-text">NC 图床</span>
             </div>
         </div>
+    </header>
 
-        <div class="status" id="status"></div>
-
-        <div class="result" id="result">
-            <div class="result-title">上传成功！</div>
-            <div class="result-link" id="viewUrl"></div>
-            <button class="copy-btn" id="copyBtn">复制查看链接</button>
+    <main>
+        <div class="upload-area" id="uploadArea">
+            <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0-12l-5 5m5-5l5 5M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+            </svg>
+            <p class="upload-text">点击上传 / 拖拽上传</p>
+            <p class="upload-hint">支持 JPG、PNG、GIF、WEBP 格式</p>
+            <input id="fileInput" type="file" multiple accept="image/jpeg,image/png,image/gif,image/webp">
         </div>
-    </div>
+
+        <div id="resultsSection" style="display: none;">
+            <div class="results-header">
+                <h3 class="results-title">上传文件</h3>
+                <div class="results-actions">
+                    <button class="action-btn" id="clearBtn">清空</button>
+                    <button class="action-btn" id="copyAllBtn">复制全部</button>
+                </div>
+            </div>
+            <div class="results-list" id="resultsList"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <svg class="footer-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32.76 31.82c.29-1.01.18-1.94-.31-2.53-.45-.55-1.15-.85-1.98-.85H13.84c-.13 0-.25-.08-.29-.2-.04-.11-.02-.23.05-.32.14-.17.34-.3.58-.3l16.81-.02c1.7-.11 3.54-1.3 4.28-2.97l.94-2.11c.03-.07.04-.14.03-.21-1.17-5.78-6.32-10.12-12.48-10.12-6.01 0-11.05 4.12-12.48 9.71-.92-.67-2.07-1.04-3.31-.93-2.5.25-4.5 2.3-4.75 4.8-.04.41-.04.81 0 1.2C1.18 27.1 0 28.96 0 31.13v.98c0 .15.12.27.27.27h29.15c.11 0 .22-.06.28-.15l.97-1.51c.17-.27.3-.57.34-.87zm5.41-10.37c-.03 0-.06.01-.1.02-.03.01-.06.01-.09.02-.16.02-.27.13-.31.28l-.61 2.1c-.3 1.01-.18 1.94.31 2.53.45.55 1.15.86 1.98.86h3.86c.13 0 .25.08.29.2.04.11.02.23-.05.32-.14.17-.34.3-.58.3l-3.98.02c-1.7.1-3.54 1.3-4.28 2.96l-.23.52c-.04.09.03.2.13.2h13.26c.11 0 .22-.07.25-.18.37-1.21.57-2.5.57-3.84 0-7.02-5.69-12.71-12.72-12.71z" fill="#F6821F"></path>
+            </svg>
+            <span>Powered by <span style="color: #6b7280;">Cloudflare Pages</span></span>
+            <span class="footer-divider">|</span>
+            <span>单文件限制 <span class="footer-highlight">100MB</span></span>
+        </div>
+    </footer>
+
+    <div class="status-toast" id="statusToast"></div>
 
     <script src="main.js"></script>
 </body>
