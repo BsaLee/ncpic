@@ -29,6 +29,22 @@ const copyBtn = document.getElementById('copyBtn');
 
 let selectedFile = null;
 
+// 复制文本到剪贴板
+function copyText(text, buttonId) {
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById(buttonId);
+        const originalText = btn.textContent;
+        btn.textContent = '已复制！';
+        btn.style.color = '#059669';
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.color = '#111827';
+        }, 2000);
+    }).catch(() => {
+        showStatus('复制失败，请手动复制', 'error');
+    });
+}
+
 // 显示状态消息
 function showStatus(message, type = 'info') {
     status.textContent = message;
@@ -224,26 +240,59 @@ async function handleUpload() {
         
         // 显示结果
         if (uploadResult.upload_result_list && uploadResult.upload_result_list.length > 0) {
-            const viewUrlValue = uploadResult.upload_result_list[0].view_url;
-            viewUrl.textContent = viewUrlValue;
+            const resultData = uploadResult.upload_result_list[0];
+            const viewUrlValue = resultData.view_url;
+            const bbCode = `[img]${viewUrlValue}[/img]`;
+            const expireAt = resultData.expire_at;
+            
+            // 格式化过期时间
+            let expireText = '永久有效';
+            if (expireAt) {
+                const expireDate = new Date(expireAt);
+                const now = new Date();
+                const diffTime = expireDate - now;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays > 0) {
+                    expireText = `${diffDays} 天后过期 (${expireDate.toLocaleDateString('zh-CN')})`;
+                } else {
+                    expireText = '已过期';
+                }
+            }
+            
+            // 更新显示内容
+            viewUrl.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 1rem; border-radius: 0.5rem; overflow: hidden; border: 1px solid #e5e7eb;">
+                        <img src="${viewUrlValue}" alt="预览" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer">
+                    </div>
+                    <div style="text-align: center; font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">
+                        <span style="color: #f97316; font-weight: 500;">✓</span> ${expireText}
+                    </div>
+                </div>
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                        <input readonly class="result-input" type="text" value="${viewUrlValue}" id="urlInput" style="flex: 1; font-size: 0.75rem; background: #f9fafb; border: 1px solid #e5e7eb; border-right: 1px solid #d1d5db; padding: 0.25rem 0.5rem; font-family: monospace; cursor: pointer; outline: none;">
+                        <button onclick="copyText('${viewUrlValue}', 'urlCopyBtn')" id="urlCopyBtn" style="font-size: 0.75rem; color: #111827; white-space: nowrap; font-weight: bold; background: #f9fafb; border: 1px solid #e5e7eb; border-left: 0; padding: 0.25rem 0.5rem; cursor: pointer;">复制 URL</button>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <input readonly class="result-input" type="text" value="${bbCode}" id="bbCodeInput" style="flex: 1; font-size: 0.75rem; background: #f9fafb; border: 1px solid #e5e7eb; border-right: 1px solid #d1d5db; padding: 0.25rem 0.5rem; font-family: monospace; cursor: pointer; outline: none;">
+                        <button onclick="copyText('${bbCode}', 'bbCodeCopyBtn')" id="bbCodeCopyBtn" style="font-size: 0.75rem; color: #111827; white-space: nowrap; font-weight: bold; background: #f9fafb; border: 1px solid #e5e7eb; border-left: 0; padding: 0.25rem 0.5rem; cursor: pointer;">复制 BBCode</button>
+                    </div>
+                </div>
+            `;
+            
             result.classList.add('show');
             showStatus('上传成功！', 'success');
             
-            // 存储查看链接用于复制
-            copyBtn.onclick = () => {
-                navigator.clipboard.writeText(viewUrlValue).then(() => {
-                    copyBtn.textContent = '已复制！';
-                    setTimeout(() => {
-                        copyBtn.textContent = '复制查看链接';
-                    }, 2000);
-                }).catch(() => {
-                    // 备用方案：选择文本
-                    const range = document.createRange();
-                    range.selectNode(viewUrl);
-                    window.getSelection().removeAllRanges();
-                    window.getSelection().addRange(range);
-                    copyBtn.textContent = '请手动复制';
-                });
+            // 添加点击输入框复制功能
+            document.getElementById('urlInput').onclick = () => {
+                copyText(viewUrlValue, 'urlCopyBtn');
+                document.getElementById('urlInput').select();
+            };
+            document.getElementById('bbCodeInput').onclick = () => {
+                copyText(bbCode, 'bbCodeCopyBtn');
+                document.getElementById('bbCodeInput').select();
             };
         } else {
             throw new Error('上传响应中没有结果');
