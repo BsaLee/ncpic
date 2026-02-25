@@ -3,58 +3,7 @@ export async function onRequestPost(context) {
   const request = context.request;
   
   try {
-    // 克隆请求以避免 body 被消费的问题
-    const clonedRequest = request.clone();
-    
-    // 检查 Content-Type
-    const contentType = clonedRequest.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      return new Response(JSON.stringify({ 
-        error: 'Content-Type must be application/json',
-        received: contentType 
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-        status: 400,
-      });
-    }
-
-    // 读取请求体文本
-    const bodyText = await clonedRequest.text();
-    
-    // 检查请求体是否为空
-    if (!bodyText || bodyText.trim() === '') {
-      return new Response(JSON.stringify({ 
-        error: 'Request body is empty' 
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-        status: 400,
-      });
-    }
-
-    // 解析 JSON
-    let body;
-    try {
-      body = JSON.parse(bodyText);
-    } catch (parseError) {
-      return new Response(JSON.stringify({ 
-        error: 'Invalid JSON in request body',
-        details: parseError.message,
-        received: bodyText.substring(0, 100)
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-        status: 400,
-      });
-    }
-
+    const body = await request.json();
     const authToken = body.authToken || body.authorization_token;
     
     if (!authToken) {
@@ -90,24 +39,7 @@ export async function onRequestPost(context) {
     });
     
     const response = await fetch(proxyRequest);
-    const responseText = await response.text();
-    
-    // 尝试解析响应
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (e) {
-      return new Response(JSON.stringify({ 
-        error: 'Invalid response from upstream API',
-        details: responseText.substring(0, 200)
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-        status: 502,
-      });
-    }
+    const data = await response.json();
     
     return new Response(JSON.stringify(data), {
       headers: {
@@ -118,8 +50,7 @@ export async function onRequestPost(context) {
     });
   } catch (error) {
     return new Response(JSON.stringify({ 
-      error: error.message,
-      stack: error.stack 
+      error: error.message
     }), {
       headers: {
         'Content-Type': 'application/json',
