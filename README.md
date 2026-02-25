@@ -38,10 +38,9 @@ npm install -g wrangler
 wrangler login
 ```
 
-3. 进入 pages 目录并部署：
+3. 部署到 Pages：
 ```bash
-cd pages
-wrangler pages deploy .
+wrangler pages deploy . --project-name=nc-image-upload
 ```
 
 ### 方法三：通过 Git 仓库（推荐用于持续部署）
@@ -63,12 +62,19 @@ wrangler pages deploy .
 
 ## 本地开发
 
-在 `pages` 目录下，直接在浏览器中打开 `index.html` 即可，或使用本地服务器：
+### 方法一：使用 Wrangler 本地开发服务器（推荐）
 
 ```bash
-# 进入 pages 目录
-cd pages
+wrangler pages dev .
+```
 
+这样可以同时测试 Pages Functions 的代理功能。
+
+### 方法二：使用简单的 HTTP 服务器
+
+直接在浏览器中打开 `index.html` 即可，或使用本地服务器：
+
+```bash
 # 使用 Python
 python -m http.server 8000
 
@@ -80,6 +86,8 @@ php -S localhost:8000
 ```
 
 然后在浏览器中访问 `http://localhost:8000`
+
+> 注意：使用简单 HTTP 服务器时，API 代理功能不可用，会遇到 CORS 错误。
 
 ## 注意事项
 
@@ -144,11 +152,13 @@ export default {
 ## 项目结构
 
 ```
-pages/
+.
 ├── index.html              # 主页面
 ├── main.js                 # 核心逻辑
+├── wrangler.toml          # Cloudflare 配置文件
 ├── functions/              # Cloudflare Pages Functions
-│   └── _worker.js         # API 代理函数
+│   └── api/
+│       └── [[path]].js    # API 代理函数（处理 /api/* 路径）
 └── README.md              # 说明文档
 ```
 
