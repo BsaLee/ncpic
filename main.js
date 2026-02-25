@@ -219,12 +219,12 @@ async function handleUpload() {
         showStatus('正在上传文件...', 'info');
         
         // 上传文件
-        const result = await uploadFile(selectedFile, uploadToken);
+        const uploadResult = await uploadFile(selectedFile, uploadToken);
         progressFill.style.width = '100%';
         
         // 显示结果
-        if (result.upload_result_list && result.upload_result_list.length > 0) {
-            const viewUrlValue = result.upload_result_list[0].view_url;
+        if (uploadResult.upload_result_list && uploadResult.upload_result_list.length > 0) {
+            const viewUrlValue = uploadResult.upload_result_list[0].view_url;
             viewUrl.textContent = viewUrlValue;
             result.classList.add('show');
             showStatus('上传成功！', 'success');
